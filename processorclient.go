@@ -53,7 +53,7 @@ func main() {
 				if err != nil {
 					log.Printf("Failed to send traffic signal data: %v\n", err)
 				}
-				time.Sleep(time.Millisecond * 100)
+				time.Sleep(time.Millisecond * 200)
 			}
 		}
 
