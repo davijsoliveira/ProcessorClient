@@ -53,8 +53,7 @@ func main() {
 				if err != nil {
 					log.Printf("Failed to send traffic signal data: %v\n", err)
 				}
-				time.Sleep(time.Millisecond * 50)
-				//countConnections()
+				time.Sleep(time.Millisecond * 100)
 			}
 		}
 
@@ -69,18 +68,6 @@ func main() {
 		}
 	}
 }
-
-//func generateRandomTrafficSignal() TrafficSignal {
-//	rand.Seed(time.Now().UnixNano())
-//
-//	return TrafficSignal{
-//		ID:              rand.Intn(3) + 1,
-//		Congestion:      rand.Intn(100),
-//		RedLightTime:    rand.Intn(10),
-//		YellowLightTime: rand.Intn(10),
-//		GreenLightTime:  rand.Intn(10),
-//	}
-//}
 
 func generateRandomTrafficSignal(signalID int) TrafficSignal {
 	rand.Seed(time.Now().UnixNano())
@@ -100,6 +87,7 @@ func sendTrafficSignalData(trafficSignal TrafficSignal) error {
 		return err
 	}
 
+	//resp, err := http.Post("http://processor-svc/traffic", "application/json", bytes.NewBuffer(payload))
 	resp, err := http.Post("http://localhost:8080/traffic", "application/json", bytes.NewBuffer(payload))
 
 	if err != nil {
@@ -139,43 +127,4 @@ func getAverageFlowRate(signalID int) (int, error) {
 	}
 
 	return response.AverageFlowRate, nil
-}
-
-func countConnections() {
-	client := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-
-	ticker := time.NewTicker(1 * time.Second)
-	defer ticker.Stop()
-
-	for range ticker.C {
-		req, err := http.NewRequest(http.MethodGet, "http://localhost:8080/stats", nil)
-		if err != nil {
-			log.Printf("Failed to create request: %v", err)
-			continue
-		}
-
-		resp, err := client.Do(req)
-		if err != nil {
-			log.Printf("Failed to make request: %v", err)
-			continue
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			log.Printf("Request failed with status: %s", resp.Status)
-			continue
-		}
-
-		var stats StatsResponse
-		err = json.NewDecoder(resp.Body).Decode(&stats)
-		if err != nil {
-			log.Printf("Failed to decode response: %v", err)
-			continue
-		}
-
-		fmt.Printf("Total Requests: %d\n", stats.TotalRequests)
-		fmt.Printf("Requests per Second: %d\n", stats.RequestsPerSecond)
-	}
 }
