@@ -12,13 +12,22 @@ import (
 )
 
 type TrafficSignal struct {
-	ID              int `json:"id"`
-	Congestion      int `json:"congestion"`
-	RedLightTime    int `json:"redLightTime"`
-	YellowLightTime int `json:"yellowLightTime"`
-	GreenLightTime  int `json:"greenLightTime"`
-	AverageFlowRate int `json:"averageFlowRate"`
+	Id         int `json:"id"`
+	Congestion int `json:"congestion"`
+	TimeRed    int `json:"timered"`
+	TimeYellow int `json:"timeyellow"`
+	TimeGreen  int `json:"timegreen"`
+	//AverageFlowRate int `json:"averageFlowRate"`
 }
+
+//type TrafficSignal struct {
+//	Id              int `json:"id"`
+//	Congestion      int `json:"congestion"`
+//	TimeRed    int `json:"timered"`
+//	TimeYellow int `json:"timeyellow"`
+//	TimeGreen  int `json:"timegreen"`
+//	//AverageFlowRate int `json:"averageFlowRate"`
+//}
 
 type StatsResponse struct {
 	TotalRequests     int64 `json:"totalRequests"`
@@ -46,19 +55,19 @@ func main() {
 	//}
 	// Gerar 10 requisições POST para cada sinal de trânsito
 	for {
-		for signalID := 1; signalID <= 3; signalID++ {
+		for signalID := 0; signalID <= 2; signalID++ {
 			for i := 1; i <= 10; i++ {
 				trafficSignal := generateRandomTrafficSignal(signalID)
 				err := sendTrafficSignalData(trafficSignal)
 				if err != nil {
 					log.Printf("Failed to send traffic signal data: %v\n", err)
 				}
-				time.Sleep(time.Millisecond * 200)
+				time.Sleep(time.Millisecond * 100)
 			}
 		}
 
 		// Fazer requisições GET para obter a média de engarrafamento de cada sinal de trânsito
-		for signalID := 1; signalID <= 3; signalID++ {
+		for signalID := 0; signalID <= 2; signalID++ {
 			averageFlowRate, err := getAverageFlowRate(signalID)
 			if err != nil {
 				log.Printf("Failed to get average flow rate for traffic signal %d: %v\n", signalID, err)
@@ -73,11 +82,11 @@ func generateRandomTrafficSignal(signalID int) TrafficSignal {
 	rand.Seed(time.Now().UnixNano())
 
 	return TrafficSignal{
-		ID:              signalID,
-		Congestion:      rand.Intn(100),
-		RedLightTime:    rand.Intn(10),
-		YellowLightTime: rand.Intn(10),
-		GreenLightTime:  rand.Intn(10),
+		Id:         signalID,
+		Congestion: rand.Intn(30),
+		TimeRed:    rand.Intn(10),
+		TimeYellow: rand.Intn(10),
+		TimeGreen:  rand.Intn(10),
 	}
 }
 
@@ -87,8 +96,7 @@ func sendTrafficSignalData(trafficSignal TrafficSignal) error {
 		return err
 	}
 
-	//resp, err := http.Post("http://processor-svc/traffic", "application/json", bytes.NewBuffer(payload))
-	resp, err := http.Post("http://localhost:8080/traffic", "application/json", bytes.NewBuffer(payload))
+	resp, err := http.Post(UrlPost, "application/json", bytes.NewBuffer(payload))
 
 	if err != nil {
 		return err
@@ -103,7 +111,7 @@ func sendTrafficSignalData(trafficSignal TrafficSignal) error {
 }
 
 func getAverageFlowRate(signalID int) (int, error) {
-	resp, err := http.Get(fmt.Sprintf("http://localhost:8080/traffic/info?id=%d", signalID))
+	resp, err := http.Get(fmt.Sprintf(UrlGet, signalID))
 	if err != nil {
 		return 0, err
 	}
